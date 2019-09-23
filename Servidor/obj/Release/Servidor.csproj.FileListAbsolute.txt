@@ -1,0 +1,6 @@
+C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\bin\Release\Servidor.exe.config
+C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\bin\Release\Servidor.exe
+C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\bin\Release\Servidor.pdb
+C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\obj\Release\Servidor.csproj.CoreCompileInputs.cache
+C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\obj\Release\Servidor.exe
+C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\obj\Release\Servidor.pdb
