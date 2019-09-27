@@ -17,3 +17,10 @@ C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\obj\Debug\Servidor.csprojAss
 C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\obj\Debug\Servidor.csproj.CoreCompileInputs.cache
 C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\obj\Debug\Servidor.exe
 C:\Users\crisf\Downloads\Servidor\Servidor\Servidor\obj\Debug\Servidor.pdb
+C:\Users\crisf\source\repos\NetworksServer\Servidor\bin\Debug\Servidor.exe.config
+C:\Users\crisf\source\repos\NetworksServer\Servidor\bin\Debug\Servidor.exe
+C:\Users\crisf\source\repos\NetworksServer\Servidor\bin\Debug\Servidor.pdb
+C:\Users\crisf\source\repos\NetworksServer\Servidor\obj\Debug\Servidor.csprojAssemblyReference.cache
+C:\Users\crisf\source\repos\NetworksServer\Servidor\obj\Debug\Servidor.csproj.CoreCompileInputs.cache
+C:\Users\crisf\source\repos\NetworksServer\Servidor\obj\Debug\Servidor.exe
+C:\Users\crisf\source\repos\NetworksServer\Servidor\obj\Debug\Servidor.pdb

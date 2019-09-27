@@ -60,7 +60,11 @@ namespace Servidor
 
                 list.Add(con);
                 Console.WriteLine(con.nick + " se Ha conectado.");
-
+                if(list.Count%2 == 0)
+                {
+                    list[list.Count - 2].streamw.WriteLine("Begin");
+                    list[list.Count - 1].streamw.WriteLine("Begin");
+                }
 
 
                 Thread t = new Thread(Escuchar_conexion);
