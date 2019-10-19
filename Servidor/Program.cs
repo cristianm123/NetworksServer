@@ -14,7 +14,7 @@ namespace Servidor
       
         static void Main(string[] args)
         {
-            Servidor_Chat chat = new Servidor_Chat();
+            Servidor_TCP chat = new Servidor_TCP();
         }    
 
     }
