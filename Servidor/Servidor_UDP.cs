@@ -26,6 +26,12 @@ namespace Servidor
         List<byte[]> frames;
         public Servidor_UDP()
         {
+            
+            
+        }
+
+        public void Inicio()
+        {
             frames = new List<byte[]>();
             string fileName = "C:/Users/crisf/Downloads/20180310_135541.mp4";
             capture = new VideoCapture(fileName);

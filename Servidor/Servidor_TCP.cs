@@ -37,7 +37,7 @@ namespace Servidor
 
         public Servidor_TCP()
         {
-            Inicio();
+
         }
 
         public void Inicio()
