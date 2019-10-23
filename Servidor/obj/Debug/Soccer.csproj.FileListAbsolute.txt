@@ -35,3 +35,5 @@ C:\Users\crisf\source\repos\NetworksServer\Servidor\obj\Debug\Soccer.csproj.Core
 C:\Users\crisf\source\repos\NetworksServer\Servidor\obj\Debug\Soccer.csproj.CopyComplete
 C:\Users\crisf\source\repos\NetworksServer\Servidor\obj\Debug\Servidor.exe
 C:\Users\crisf\source\repos\NetworksServer\Servidor\obj\Debug\Servidor.pdb
+C:\Users\crisf\source\repos\NetworksServer\Servidor\bin\Debug\itextsharp.dll
+C:\Users\crisf\source\repos\NetworksServer\Servidor\bin\Debug\itextsharp.xml
