@@ -37,7 +37,7 @@ namespace Servidor
         public void Inicio()
         {
             frames = new List<byte[]>();
-            string fileName = "C:/Users/crisf/Downloads/WhatsApp Video 2019-10-23 at 8.22.47 AM.mp4";
+            string fileName = "C:/Users/crisf/Downloads/Rappi2 (1).mp4";
             capture = new VideoCapture(fileName);
             Mat m = new Mat();
             TotalFrame = capture.GetCaptureProperty(Emgu.CV.CvEnum.CapProp.FrameCount);

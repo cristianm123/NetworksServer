@@ -23,7 +23,9 @@ namespace Servidor
         private TcpClient client = new TcpClient();
         private IPEndPoint ipendpoint = new IPEndPoint(IPAddress.Any, 8000);
         private List<Connection> list = new List<Connection>();
-
+        private List<Thread> hilos = new List<Thread>();
+        private Dictionary<string, string> matches = new Dictionary<string, string>();
+        private int cont = 0;
         Connection con;
 
 
@@ -33,6 +35,7 @@ namespace Servidor
             public StreamWriter streamw;
             public StreamReader streamr;
             public string nick;
+            public string msj;
         }
 
         public Servidor_TCP()
@@ -55,20 +58,46 @@ namespace Servidor
                 con.stream = client.GetStream();
                 con.streamr = new StreamReader(con.stream);
                 con.streamw = new StreamWriter(con.stream);
+                con.msj = "";
 
                 con.nick = con.streamr.ReadLine();
 
                 list.Add(con);
-                Console.WriteLine(con.nick + " se Ha conectado.");
-                if(list.Count%2 == 0)
+                Console.WriteLine(con.nick + " se Ha conectado: " + list.Count);
+                if(matches.ContainsKey(con.nick) && matches[con.nick].Equals(list[list.Count-2].nick))
                 {
+                    list[list.Count - 2].streamw.WriteLine("givemelove");
+                    list[list.Count - 2].streamw.Flush();
+                    con.streamw.WriteLine("takeyourlove");
+                    con.streamw.Flush();
+                    string m = list[list.Count-2].streamr.ReadLine();
+                    Console.WriteLine(m);
+                    con.streamw.WriteLine(m);
+                    con.streamw.Flush();
+                    list[list.Count - 2].streamw.WriteLine("Continue");
+                    list[list.Count - 2].streamw.Flush();
+                    con.streamw.WriteLine("Continue");
+                    con.streamw.Flush();
+                    list[list.Count - 2].streamw.WriteLine("keep");
+                    list[list.Count - 2].streamw.Flush();
+                    con.streamw.WriteLine("keep");
+                    con.streamw.Flush();
+                    matches.Remove(con.nick);
+                }
+                else if (list.Count % 2 == 0)
+                {
+                    if(matches.ContainsValue(list[list.Count - 2].nick))
+                    {
+                        list[list.Count - 2].streamw.WriteLine("Restart");
+                        list[list.Count - 2].streamw.Flush();
+                    }
                     list[list.Count - 2].streamw.WriteLine("Begin");
                     list[list.Count - 1].streamw.WriteLine("Begin");
                 }
 
 
                 Thread t = new Thread(Escuchar_conexion);
-
+                hilos.Add(t);
                 t.Start(list.Count);
             }
 
@@ -78,19 +107,24 @@ namespace Servidor
         void Escuchar_conexion(object o)
         {
             int i = Convert.ToInt32(o);
-            Connection hcon = con;
-            
+
+            Connection hcon = new Connection();
+            hcon.nick = con.nick;
+            hcon.stream = con.stream;
+            hcon.streamr = con.streamr;
+            hcon.streamw = con.streamw;
+            hcon.msj = "";
+            Console.WriteLine("Escuchando conexion de {0}: {1}", hcon.nick, i);
+            Connection c = new Connection();
             do
             {
-                
                 try
                 {
-
                     if (i % 2 == 0 || list.Count != i)
                     {
                         string tmp = hcon.streamr.ReadLine();
                         Console.WriteLine(hcon.nick + ": " + tmp);
-                        Connection c;
+                        
                         if (i % 2 == 0)
                         {
                             c = list[i - 2];
@@ -99,25 +133,64 @@ namespace Servidor
                         {
                             c = list[i];
                         }
-                        try
-                        {
-                            c.streamw.WriteLine(tmp);
-                            c.streamw.Flush();
-                        }
-                        catch
-                        {
-                        } 
+
+
+                        c.streamw.WriteLine(tmp);
+                        c.streamw.Flush();
+                      
                     }
                     
                 }
-                catch
+                catch(Exception e)
                 {
-                    list.Remove(hcon);
-                    Console.WriteLine(con.nick + " se Ha desconectado." + i);
+                    Console.WriteLine(e.StackTrace);
+                    
+                    
+                    Console.WriteLine(hcon.nick + " se Ha desconectado." + i);
+                    if (cont % 2 == 0)
+                    {
+                        waiting(c, hcon.nick);
+                        cont++;
+                        matches.Add(hcon.nick, c.nick);
+                    }
+                    else
+                    {
+                        cont++;
+                    }
+                    
                     break;
                 }
             } while (true);
+            try
+            {
+                c.streamw.WriteLine("Wait");
+                c.streamw.Flush();
+            }
+            catch
+            {
+                Console.WriteLine("c");
+            }
+            
+            
+
+
         }
+
+        private void waiting(Connection c, string nick)
+        {
+            Connection p = new Connection();
+            p.nick = c.nick;
+            p.stream = c.stream;
+            p.streamr = c.streamr;
+            p.streamw = c.streamw;
+            list.Add(p);
+            Console.WriteLine("se añadio al final: " + c.nick + ", se elimino a: " + nick);
+            con = c;
+            Thread t = new Thread(Escuchar_conexion);
+            hilos.Add(t);
+            t.Start(list.Count);
+        }
+
 
     }
 }
