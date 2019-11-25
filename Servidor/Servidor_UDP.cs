@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -27,7 +28,8 @@ namespace Servidor
         Dictionary<string, double> hash;
 
         VideoCapture capture;
-        List<byte[]> frames;
+        List<byte[]> framesCompressed;
+        List<byte[]> framesT;
         public Servidor_UDP()
         {
             hash = new Dictionary<string, double>();
@@ -36,22 +38,73 @@ namespace Servidor
 
         public void Inicio()
         {
-            frames = new List<byte[]>();
+            framesCompressed = new List<byte[]>();
+            framesT = new List<byte[]>();
             string fileName = "C:/Users/crisf/Downloads/Rappi2 (1).mp4";
             capture = new VideoCapture(fileName);
             Mat m = new Mat();
             TotalFrame = capture.GetCaptureProperty(Emgu.CV.CvEnum.CapProp.FrameCount);
             Fps = capture.GetCaptureProperty(Emgu.CV.CvEnum.CapProp.Fps);
-            while (FrameNo < TotalFrame)
+            List<double> l = new List<double>();
+            Console.WriteLine("SELECT YOUR COMPRESSION METHOD:\n[1] LOSSY COMPRESSION.\n[2] COMPRESSION WITHOUT LOSS.\n[3] HYBRID.");
+            switch (int.Parse(Console.ReadLine()))
             {
-                capture.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.PosFrames, FrameNo);
-                capture.Read(m);
-                var b = GetCompressedBitmap(m.Bitmap, 60L);
-
-                //ImageConverter converter = new ImageConverter();
-                frames.Add(b);
-                FrameNo += 2;
+                case 1:
+                    while (FrameNo < TotalFrame)
+                    {
+                        capture.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.PosFrames, FrameNo);
+                        capture.Read(m);
+                        //This is the original image taken from the frame
+                        var originalImage = ImageToByte(m.Bitmap);
+                        //This is the image compressed without data loss
+                        var compressedImage = Compress(originalImage);
+                        //The percent of compressed data for the frame
+                        l.Add(1.0 - ((double)compressedImage.Count()) / ((double)originalImage.Count()));
+                        Console.Write(Math.Round(l.Last(), 2) * 100 + "%. | ");
+                        framesCompressed.Add(compressedImage);
+                        framesT.Add(originalImage);
+                        FrameNo += 2;
+                    }
+                    break;
+                case 2:
+                    while (FrameNo < TotalFrame)
+                    {
+                        capture.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.PosFrames, FrameNo);
+                        capture.Read(m);
+                        //This is the original image taken from the frame
+                        var originalImage = ImageToByte(m.Bitmap);
+                        //This is the image compressed with data loss
+                        var lossyImage = GetCompressedBitmap(m.Bitmap, 60L);
+                        //The percent of compressed data for the frame
+                        l.Add(1.0 - ((double)lossyImage.Count()) / ((double)originalImage.Count()));
+                        Console.Write(Math.Round(l.Last(), 2) * 100 + "%. | ");
+                        framesCompressed.Add(lossyImage);
+                        framesT.Add(originalImage);
+                        FrameNo += 2;
+                    }
+                    break;
+                case 3:
+                    while (FrameNo < TotalFrame)
+                    {
+                        capture.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.PosFrames, FrameNo);
+                        capture.Read(m);
+                        //This is the original image taken from the frame
+                        var originalImage = ImageToByte(m.Bitmap);
+                        //This is the image compressed with data loss
+                        var lossyImage = GetCompressedBitmap(m.Bitmap, 60L);
+                        //This is the image compressed without data loss
+                        var compressedImage = Compress(lossyImage);
+                        //The percent of compressed data for the frame
+                        l.Add(1.0 - ((double)compressedImage.Count()) / ((double)originalImage.Count()));
+                        Console.Write(Math.Round(l.Last(), 2) * 100 + "%. | ");
+                        framesCompressed.Add(compressedImage);
+                        framesT.Add(originalImage);
+                        FrameNo += 2;
+                    }
+                    break;
             }
+            Console.WriteLine();
+            Console.WriteLine("Compress average: {0}", Math.Round(l.Average(), 5) * 100 + "%");
             ipep = new IPEndPoint(IPAddress.Any, 11000);
             newsock = new UdpClient(ipep);
             while (true)
@@ -90,6 +143,7 @@ namespace Servidor
 
         private byte[] GetCompressedBitmap(Bitmap bmp, long quality)
         {
+            
             using (var mss = new MemoryStream())
             {
                 EncoderParameter qualityParam = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
@@ -107,10 +161,10 @@ namespace Servidor
             IPEndPoint sender = list[i];
             Console.WriteLine("Message received from {0}: ", sender.ToString());
             int j = 0;
-            while (j++ < frames.Count)
+            while (j++ < framesCompressed.Count)
             {
-                Console.WriteLine("Packet send. {0}/{1}", j, frames.Count);
-                newsock.Send(frames[j - 1], frames[j - 1].Length, sender);
+                Console.WriteLine("Packet send. {0}/{1}", j, framesCompressed.Count);
+                newsock.Send(framesCompressed[j - 1], framesCompressed[j - 1].Length, sender);
                 Thread.Sleep(60);
             }
         }
@@ -134,5 +188,31 @@ namespace Servidor
             doc.Add(table);
             doc.Close();
         }
+
+        public static byte[] ImageToByte(System.Drawing.Image img)
+        {
+            ImageConverter converter = new ImageConverter();
+            return (byte[])converter.ConvertTo(img, typeof(byte[]));
+        }
+
+        public static byte[] Compress(byte[] buffer)
+        {
+            MemoryStream ms = new MemoryStream();
+            GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true);
+            zip.Write(buffer, 0, buffer.Length);
+            zip.Close();
+            ms.Position = 0;
+
+            MemoryStream outStream = new MemoryStream();
+
+            byte[] compressed = new byte[ms.Length];
+            ms.Read(compressed, 0, compressed.Length);
+
+            byte[] gzBuffer = new byte[compressed.Length + 4];
+            Buffer.BlockCopy(compressed, 0, gzBuffer, 4, compressed.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, gzBuffer, 0, 4);
+            return gzBuffer;
+        }
+
     }
 }

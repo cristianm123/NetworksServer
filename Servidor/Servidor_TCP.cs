@@ -123,7 +123,7 @@ namespace Servidor
                     if (i % 2 == 0 || list.Count != i)
                     {
                         string tmp = hcon.streamr.ReadLine();
-                        Console.WriteLine(hcon.nick + ": " + tmp);
+                        //Console.WriteLine(hcon.nick + ": " + tmp);
                         
                         if (i % 2 == 0)
                         {
@@ -141,9 +141,8 @@ namespace Servidor
                     }
                     
                 }
-                catch(Exception e)
+                catch
                 {
-                    Console.WriteLine(e.StackTrace);
                     
                     
                     Console.WriteLine(hcon.nick + " se Ha desconectado." + i);
@@ -167,8 +166,7 @@ namespace Servidor
                 c.streamw.Flush();
             }
             catch
-            {
-                Console.WriteLine("c");
+            { 
             }
             
             
