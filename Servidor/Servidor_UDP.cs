@@ -47,9 +47,42 @@ namespace Servidor
             Fps = capture.GetCaptureProperty(Emgu.CV.CvEnum.CapProp.Fps);
             List<double> l = new List<double>();
             Console.WriteLine("SELECT YOUR COMPRESSION METHOD:\n[1] LOSSY COMPRESSION.\n[2] COMPRESSION WITHOUT LOSS.\n[3] HYBRID.");
+            long MSE = 0;
             switch (int.Parse(Console.ReadLine()))
             {
                 case 1:
+                    while (FrameNo < TotalFrame)
+                    {
+                        capture.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.PosFrames, FrameNo);
+                        capture.Read(m);
+                        
+                        
+                        //This is the original image taken from the frame
+                        var originalImage = ImageToByte(m.Bitmap);
+                        //This is the image compressed with data loss
+                        var lossyImage = GetCompressedBitmap(m.Bitmap, 60L);
+                        ImageConverter ic = new ImageConverter();
+
+                        System.Drawing.Image img = (System.Drawing.Image)ic.ConvertFrom(lossyImage);
+                        Bitmap bitmap1 = new Bitmap(img);
+                        for (int i = 0; i < m.Bitmap.Width; i++)
+                        {
+                            for (int j = 0; j < m.Bitmap.Height; j++)
+                            {
+                                MSE += (long)Math.Pow(m.Bitmap.GetPixel(i, j).ToArgb() - bitmap1.GetPixel(i, j).ToArgb(), 2);
+                            }
+                        }
+                        
+                        //The percent of compressed data for the frame
+                        l.Add(1.0 - ((double)lossyImage.Count()) / ((double)originalImage.Count()));
+                        //Console.Write(Math.Round(l.Last(), 2) * 100 + "%. | ");
+                        framesCompressed.Add(lossyImage);
+                        framesT.Add(originalImage);
+                        Console.WriteLine(framesCompressed.Count);
+                        FrameNo += 2;
+                    }
+                    break;
+                case 2:
                     while (FrameNo < TotalFrame)
                     {
                         capture.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.PosFrames, FrameNo);
@@ -62,23 +95,6 @@ namespace Servidor
                         l.Add(1.0 - ((double)compressedImage.Count()) / ((double)originalImage.Count()));
                         Console.Write(Math.Round(l.Last(), 2) * 100 + "%. | ");
                         framesCompressed.Add(compressedImage);
-                        framesT.Add(originalImage);
-                        FrameNo += 2;
-                    }
-                    break;
-                case 2:
-                    while (FrameNo < TotalFrame)
-                    {
-                        capture.SetCaptureProperty(Emgu.CV.CvEnum.CapProp.PosFrames, FrameNo);
-                        capture.Read(m);
-                        //This is the original image taken from the frame
-                        var originalImage = ImageToByte(m.Bitmap);
-                        //This is the image compressed with data loss
-                        var lossyImage = GetCompressedBitmap(m.Bitmap, 60L);
-                        //The percent of compressed data for the frame
-                        l.Add(1.0 - ((double)lossyImage.Count()) / ((double)originalImage.Count()));
-                        Console.Write(Math.Round(l.Last(), 2) * 100 + "%. | ");
-                        framesCompressed.Add(lossyImage);
                         framesT.Add(originalImage);
                         FrameNo += 2;
                     }
@@ -104,6 +120,9 @@ namespace Servidor
                     break;
             }
             Console.WriteLine();
+            MSE /= l.Count * 640 * 360;
+            long L = 4294967296;
+            Console.WriteLine("MSE: {0}\nRMSE: {1}\nPSNR: {2}", MSE, Math.Sqrt(MSE), 10 * Math.Log10(L * L / MSE));
             Console.WriteLine("Compress average: {0}", Math.Round(l.Average(), 5) * 100 + "%");
             ipep = new IPEndPoint(IPAddress.Any, 11000);
             newsock = new UdpClient(ipep);
